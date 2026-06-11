@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 Tính Lương Nhân Viên</title>
+    <meta name="description" content="Công cụ tính lương hàng tháng cho nhân viên nhà thuốc">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- ─── HEADER ──────────────────────────────────────── -->
+    <header class="header" id="header">
+        <div class="header-left">
+            <h1 class="header-title">💰 Tính Lương Nhân Viên</h1>
+        </div>
+        <div class="header-center">
+            <button class="month-btn" id="btnPrevMonth" title="Tháng trước">◀</button>
+            <span class="month-display" id="monthDisplay">Tháng 6 / 2026</span>
+            <button class="month-btn" id="btnNextMonth" title="Tháng sau">▶</button>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-save" id="btnSave" title="Lưu bảng lương">
+                <span class="btn-icon">💾</span> Lưu
+            </button>
+            <button class="btn btn-settings" id="btnManageEmployees" title="Quản lý nhân viên">
+                <span class="btn-icon">⚙️</span> Quản lý NV
+            </button>
+        </div>
+    </header>
+
+    <!-- ─── EMPLOYEE TABS ───────────────────────────────── -->
+    <nav class="employee-tabs" id="employeeTabs">
+        <!-- Tabs will be rendered by JS -->
+    </nav>
+
+    <!-- ─── MAIN CONTENT ────────────────────────────────── -->
+    <main class="main-content" id="mainContent">
+        <div class="content-grid">
+            <!-- LEFT: Input Form -->
+            <section class="card card-input" id="inputCard">
+                <h2 class="card-title">📝 Nhập Liệu</h2>
+                <form id="salaryForm" autocomplete="off">
+                    <!-- Đi trễ -->
+                    <div class="form-group">
+                        <label class="form-label">Đi trễ</label>
+                        <div class="input-row">
+                            <input type="number" class="form-input input-sm" id="lateCount" 
+                                   min="0" value="0" placeholder="Số phút">
+                            <span class="input-sep">phút ×</span>
+                            <input type="number" class="form-input input-sm" id="latePenalty" 
+                                   min="0" value="5" step="0.1" placeholder="k/phút">
+                            <span class="input-unit">k/phút</span>
+                        </div>
+                        <span class="auto-rate" id="lateTotal">= 0k</span>
+                    </div>
+
+                    <!-- Tăng ca -->
+                    <div class="form-group">
+                        <label class="form-label">Tăng ca</label>
+                        <div class="input-row">
+                            <input type="number" class="form-input input-sm" id="overtimeHours" 
+                                   min="0" value="0" placeholder="Số giờ">
+                            <span class="input-sep">giờ</span>
+                            <span class="auto-rate" id="overtimeRate">ĐG: --k/giờ</span>
+                        </div>
+                    </div>
+
+                    <!-- Nghỉ -->
+                    <div class="form-group">
+                        <label class="form-label">Nghỉ</label>
+                        <div class="input-row">
+                            <input type="number" class="form-input input-sm" id="daysOff" 
+                                   min="0" value="0" placeholder="Số ngày">
+                            <span class="input-sep">ngày</span>
+                        </div>
+                        <span class="auto-rate" id="daysOffRate">= ĐG tăng ca × 9h = --k/ngày</span>
+                    </div>
+
+                    <!-- Thưởng -->
+                    <div class="form-group">
+                        <label class="form-label">Thưởng</label>
+                        <div class="input-row">
+                            <input type="number" class="form-input input-md" id="bonusAmount" 
+                                   min="0" value="0" step="0.1" placeholder="Số tiền">
+                            <span class="input-unit">k</span>
+                        </div>
+                        <input type="text" class="form-input input-full" id="bonusNote" 
+                               placeholder="Ghi chú (VD: Giỗ tổ + 30/4)">
+                    </div>
+
+                    <!-- Doanh số -->
+                    <div class="form-group">
+                        <label class="form-label">Doanh số (KiotViet)</label>
+                        <div class="input-row">
+                            <input type="number" class="form-input input-lg" id="salesTotal" 
+                                   min="0" value="0" step="0.1" placeholder="Tổng doanh số tư vấn">
+                            <span class="input-unit">k</span>
+                        </div>
+                        <span class="auto-rate" id="commissionRate">Hoa hồng: 2%</span>
+                    </div>
+
+                    <!-- Giữ lại -->
+                    <div class="form-group">
+                        <label class="form-label">Giữ lại</label>
+                        <div class="input-row">
+                            <input type="number" class="form-input input-md" id="withholding" 
+                                   min="0" value="0" step="0.1" placeholder="Số tiền">
+                            <span class="input-unit">k</span>
+                        </div>
+                    </div>
+
+                    <!-- Upload ảnh -->
+                    <div class="form-group">
+                        <label class="form-label">📎 Ảnh doanh số KiotViet</label>
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="kiotvietImage" accept="image/*" hidden>
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <span class="upload-icon">📷</span>
+                                <span>Kéo thả hoặc click để chọn ảnh</span>
+                            </div>
+                            <img id="uploadPreview" class="upload-preview" alt="Preview" style="display:none">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-calculate" id="btnCalculate">
+                        🔄 Tính lương
+                    </button>
+                </form>
+            </section>
+
+            <!-- RIGHT: Result -->
+            <section class="card card-result" id="resultCard">
+                <h2 class="card-title">📊 Kết Quả</h2>
+                <div class="result-list" id="resultList">
+                    <!-- Rendered by JS -->
+                    <div class="result-empty">
+                        <span class="result-empty-icon">💼</span>
+                        <p>Nhập liệu và bấm "Tính lương" để xem kết quả</p>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-export" id="btnExportSingle" style="display:none">
+                    📸 Xuất ảnh lương NV này
+                </button>
+            </section>
+        </div>
+    </main>
+
+    <!-- ─── SUMMARY TABLE ───────────────────────────────── -->
+    <section class="card card-summary" id="summarySection">
+        <h2 class="card-title">📋 Bảng Tổng Hợp</h2>
+        <div class="table-wrapper">
+            <table class="summary-table" id="summaryTable">
+                <thead>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Lương cứng</th>
+                        <th>Tăng ca</th>
+                        <th>Thưởng</th>
+                        <th>Phụ cấp</th>
+                        <th>DS 2%</th>
+                        <th>Trừ</th>
+                        <th class="col-total">TỔNG</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryBody">
+                    <!-- Rendered by JS -->
+                </tbody>
+            </table>
+        </div>
+        <div class="summary-actions">
+            <button class="btn btn-export" id="btnExportAll">📸 Xuất ảnh tất cả NV</button>
+        </div>
+    </section>
+
+    <!-- ─── EMPLOYEE MANAGEMENT MODAL ───────────────────── -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none">
+        <div class="modal" id="employeeModal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Quản Lý Nhân Viên</h3>
+                <button class="modal-close" id="btnCloseModal">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── SALARY SLIP (Hidden, used for image export) ── -->
+    <div id="salarySlipContainer" style="position:absolute;left:-9999px;top:-9999px;">
+        <div id="salarySlip" class="salary-slip">
+            <!-- Rendered by JS before export -->
+        </div>
+    </div>
+
+    <!-- ─── TOAST ──────────────────────────────────── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

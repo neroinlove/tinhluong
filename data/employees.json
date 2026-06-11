@@ -1,0 +1,48 @@
+{
+  "employees": [
+    {
+      "id": "vy",
+      "name": "Vy",
+      "base_salary": 4700,
+      "gas_allowance": 300,
+      "responsibility": 600,
+      "overtime_rate": 17.5,
+      "daily_rate": 157,
+      "commission_rate": 2,
+      "extra_bonus": 0
+    },
+    {
+      "id": "ly",
+      "name": "Ly",
+      "base_salary": 4700,
+      "gas_allowance": 300,
+      "responsibility": 600,
+      "overtime_rate": 17.5,
+      "daily_rate": 157,
+      "commission_rate": 2,
+      "extra_bonus": 0
+    },
+    {
+      "id": "an",
+      "name": "An",
+      "base_salary": 5000,
+      "gas_allowance": 0,
+      "responsibility": 1000,
+      "overtime_rate": 18.5,
+      "daily_rate": 167,
+      "commission_rate": 2,
+      "extra_bonus": 0
+    },
+    {
+      "id": "hoa",
+      "name": "Hòa",
+      "base_salary": 2000,
+      "gas_allowance": 300,
+      "responsibility": 0,
+      "overtime_rate": 15,
+      "daily_rate": 100,
+      "commission_rate": 2,
+      "extra_bonus": 1000
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# System and editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Antigravity/Agent specific directories
+.agents/
+.brain/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
