@@ -1,0 +1,59 @@
+{
+  "meta": { "schema_version": "1.1.0", "awf_version": "4.0.0" },
+  "project": { 
+    "name": "Công Cụ Tính Lương Nhân Viên", 
+    "type": "Internal Web App", 
+    "status": "Active" 
+  },
+  "tech_stack": { 
+    "frontend": {"framework": "Vanilla JS", "css": "Vanilla CSS (Dark Mode)", "libraries": ["Tesseract.js (OCR)", "html2canvas"]}, 
+    "backend": {"framework": "Flask (Python)"}, 
+    "database": {"type": "Local JSON Files", "path": "data/"} 
+  },
+  "database_schema": { 
+    "summary": "Lưu trữ thông tin nhân viên cố định và bảng lương từng tháng",
+    "tables": [
+      {"name": "employees.json", "description": "Lưu cấu hình nhân viên: id, name, base_salary, gas_allowance, responsibility, overtime_rate, daily_rate, commission_rate, extra_bonus"},
+      {"name": "records/YYYY-MM.json", "description": "Lưu dữ liệu tính lương từng tháng: số phút đi trễ, giờ tăng ca, ngày nghỉ, thưởng, doanh số, ảnh chụp hóa đơn, phạt"}
+    ],
+    "relationships_explained": "Mỗi tháng có 1 file records riêng biệt. ID nhân viên trong records liên kết với employees.json" 
+  },
+  "api_endpoints": [
+    {"path": "GET /api/employees", "explained": "Lấy danh sách tất cả nhân viên (hỗ trợ tham số month để trả về cấu hình nhân viên tương ứng với thời điểm đó)"},
+    {"path": "POST /api/employees", "explained": "Thêm nhân viên mới (tự tạo ID từ tên)"},
+    {"path": "PUT /api/employees/<emp_id>", "explained": "Cập nhật thông tin nhân viên"},
+    {"path": "DELETE /api/employees/<emp_id>", "explained": "Xóa nhân viên"},
+    {"path": "GET /api/salary/<month>", "explained": "Lấy dữ liệu lương của tháng cụ thể (YYYY-MM)"},
+    {"path": "POST /api/salary/<month>", "explained": "Lưu bảng lương của tháng đó"},
+    {"path": "POST /api/calculate", "explained": "Tính lương nháp (preview) không lưu vào file (hỗ trợ truyền month để áp dụng cấu hình động)"},
+    {"path": "POST /api/upload-image", "explained": "Upload ảnh doanh số KiotViet (trả về tên file)"},
+    {"path": "POST /api/export-image", "explained": "Nhận base64 ảnh bảng lương và lưu thẳng ra màn hình Desktop của User"}
+  ],
+  "business_rules": [
+    "Đi trễ: Mặc định phạt 5k/phút",
+    "Ngày nghỉ: Khấu trừ = (số ngày) × (đơn giá tăng ca) × 9 giờ",
+    "Ngày nghỉ bằng 0: Tự động cộng thêm 1 ngày lương (tương đương 9 tiếng tăng ca) vào phần Tăng ca",
+    "Tăng ca: Tính theo số giờ (hours) nhân đơn giá tăng ca",
+    "Phạt: Thêm khoản phạt cùng ghi chú chi tiết lý do phạt vào các khoản trừ",
+    "Hoa hồng: Doanh số KiotViet × tỷ lệ commission (thường 2%)",
+    "Cấu hình động nhân sự Hòa: Bắt đầu từ tháng 6/2026, các hạng mục lương của Hòa giống hệt Vy và Ly. Trước tháng 6/2026 giữ nguyên cấu hình cũ (Lương cứng 2000, xăng xe 300, trách nhiệm 0, OT 15, ngày công 100, hoa hồng 2%, thưởng cố định 1000)",
+    "Nhân sự đặc biệt: An không có xăng xe (0k), những người khác thường là 300k"
+  ],
+  "features": [
+    "Nhập liệu và tính lương tự động",
+    "OCR (Tesseract.js): Tự động trích xuất số tiền doanh thu tổng từ ảnh màn hình KiotViet",
+    "Xuất ảnh: Render bảng lương thành ảnh và tự động lưu ra Desktop",
+    "Auto-save: Dữ liệu nhập liệu dở dang được tự động lưu khi thay đổi tháng hoặc lưu vào localStorage chống mất dữ liệu khi F5",
+    "Mặc định mở tháng trước: Khi khởi chạy ứng dụng, mặc định hiển thị tính lương của tháng trước tháng hiện tại (lùi 1 tháng)"
+  ],
+  "knowledge_items": { 
+    "patterns": ["DOM rendering bằng createElement thay vì innerHTML để tránh XSS"], 
+    "gotchas": [
+      "Tránh dùng a.download với data URL trên Chrome vì dễ bị lỗi tên file UUID (đã fix bằng Flask API ghi file ra Desktop hoặc canvas.toBlob)",
+      "HTML Injection: Tên nhân viên cần sanitize_text() và ID cần sanitize_id() ở backend để tránh script injection",
+      "KiotViet OCR: Phải parse kỹ qua 3 chiến lược: tìm dòng 'SL mặt hàng', tìm cột 'Doanh thu thuần', fallback số lớn.",
+      "Cập nhật cấu hình động: Cấu hình nhân viên có thể thay đổi theo tháng (ví dụ như trường hợp của Hòa bắt đầu đổi từ tháng 6/2026). Khi gọi API employees hoặc calculate, luôn phải đính kèm tham số month để lấy cấu hình phù hợp với thời gian cần tính."
+    ], 
+    "conventions": ["Lưu tiền tệ theo đơn vị ngàn đồng (k). VD: 4700 = 4,700,000 VND"] 
+  }
+}

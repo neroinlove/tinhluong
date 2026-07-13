@@ -1,0 +1,20 @@
+{
+  "name": "tinh-luong-dev-operator",
+  "version": "1.0.0",
+  "owner": "AntiGravity",
+  "domain": "salary-calculator",
+  "mode": "executor-debugger (Isolation/Step-by-Step)",
+  "status": "active",
+  "last_updated": "2026-06-10",
+  "skill_md_role": "core operating contract",
+  "playbook_file": "dec-debug-playbook.md",
+  "decision_rules_file": "AG_DECISION_RULES.md",
+  "lessons_file": "AG_LESSONS.jsonl",
+  "lesson_query_mode": "filtered-by-tag-file-symptom-surface",
+  "promotion_rule": "promote lesson when repeated >= 3 times or when it reveals a high-value reusable pattern",
+  "versioning_rule": {
+    "patch": "small wording tweaks, minor lesson updates, low-impact rule clarifications",
+    "minor": "new rules, new workflow sections, promoted patterns, meaningful behavior expansion",
+    "major": "role change, architecture shift, lifecycle redesign, incompatible operating changes"
+  }
+}

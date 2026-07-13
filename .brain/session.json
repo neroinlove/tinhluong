@@ -1,0 +1,29 @@
+{
+  "updated_at": "2026-07-13T06:58:19+07:00",
+  "working_on": {
+    "feature": "Dynamic Month Configuration, Overtime Bonus & Penalty",
+    "task": "Added month-based configuration, 9-hour overtime bonus for 0 days off, Penalty input with notes, and month-switch auto-save",
+    "status": "completed",
+    "files": ["app.py", "static/js/app.js", "templates/dashboard.html", "data/employees.json"],
+    "blockers": [],
+    "notes": "Enabled dynamic monthly config overrides for specific employees. Standardized overtime rewards and penalty structures. Enabled auto-saving to backend on month switches."
+  },
+  "pending_tasks": [],
+  "recent_changes": [
+    { "timestamp": "2026-07-13", "type": "feature", "description": "Adjusted default application month to start at currentMonth - 1 (previous month)", "files": ["static/js/app.js"] },
+    { "timestamp": "2026-07-13", "type": "feature", "description": "Implemented auto-save on month change to prevent data loss", "files": ["static/js/app.js"] },
+    { "timestamp": "2026-07-13", "type": "feature", "description": "Added dynamic employee configuration based on queried month (specifically for Hoa's changes in 2026-06)", "files": ["app.py", "static/js/app.js", "data/employees.json"] },
+    { "timestamp": "2026-07-13", "type": "feature", "description": "Automatically reward 9 hours of overtime when days_off is 0", "files": ["app.py", "static/js/app.js"] },
+    { "timestamp": "2026-07-13", "type": "feature", "description": "Added Phạt (penalty amount and note) input and display throughout results, summary and slips", "files": ["app.py", "static/js/app.js", "templates/dashboard.html"] }
+  ],
+  "errors_encountered": [
+    { "error": "Chrome download attribute ignored for data URLs resulting in UUID filenames", "solution": "Created a Flask API endpoint `/api/export-image` to save base64 directly to the user's Desktop", "resolved": true },
+    { "error": "XSS injection via employee name field", "solution": "Added `sanitize_text` and `sanitize_id` in `app.py` and converted innerHTML to textContent/createElement in JS", "resolved": true },
+    { "error": "OCR reading 'St mặt hàng' instead of 'SL'", "solution": "Relaxed the regex in JS to fuzzy match the 'mặt hàng' keyword", "resolved": true }
+  ],
+  "decisions_made": [
+    { "decision": "Save images directly to Desktop via Flask", "reason": "Bypass browser restrictions on downloading Data URIs with custom filenames" },
+    { "decision": "Use localStorage for form draft", "reason": "Prevent data loss on accidental F5, but clear on Ctrl+F5" },
+    { "decision": "Auto-save to backend when switching months", "reason": "Avoid local draft override and prevent data loss when checking other months" }
+  ]
+}

@@ -15,8 +15,8 @@ venv.bak/
 *.swo
 
 # Antigravity/Agent specific directories
-.agents/
-.brain/
+# .agents/
+# .brain/
 
 # Python cache
 __pycache__/
