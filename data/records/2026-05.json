@@ -1,0 +1,28 @@
+{
+  "month": "2026-05",
+  "records": [
+    {
+      "employee_id": "vy",
+      "late_count": 0,
+      "late_penalty_each": 5,
+      "overtime_hours": 0,
+      "days_off": 0,
+      "bonus_amount": 0,
+      "bonus_note": "",
+      "sales_total": 0,
+      "withholding": 0,
+      "penalty_amount": 0,
+      "penalty_note": "",
+      "kiotviet_image": "",
+      "calculated": {
+        "overtime_total": 157.5,
+        "late_total": 0,
+        "days_off_deduction": 0.0,
+        "commission": 0.0,
+        "extra_bonus": 0,
+        "penalty_total": 0,
+        "total_salary": 5757.5
+      }
+    }
+  ]
+}

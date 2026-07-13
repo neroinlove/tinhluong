@@ -2,7 +2,7 @@
 const App = {
   employees: [],
   currentEmpId: null,
-  currentMonth: new Date(),
+  currentMonth: (() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d; })(),
   records: {},
 
   async init() {
@@ -24,13 +24,24 @@ const App = {
   },
 
   // ─── Data ───
-  async loadEmployees() {
-    const data = await this.api('/api/employees');
+  async loadEmployees(month) {
+    const m = month || this.getMonthStr();
+    const data = await this.api(`/api/employees?month=${m}`);
     if (data) this.employees = data.employees || [];
   },
 
   async loadSalaryData() {
     const m = this.getMonthStr();
+    await this.loadEmployees(m);
+    
+    // Refresh current employee header display if selected
+    const emp = this.employees.find(e => e.id === this.currentEmpId);
+    if (emp) {
+      document.getElementById('overtimeRate').textContent = `ĐG: ${emp.overtime_rate}k/giờ`;
+      document.getElementById('commissionRate').textContent = `Hoa hồng: ${emp.commission_rate}%`;
+      document.getElementById('daysOffRate').textContent = `= ${emp.overtime_rate}k × 9h = ${(emp.overtime_rate * 9).toLocaleString('vi-VN')}k/ngày`;
+    }
+
     const data = await this.api(`/api/salary/${m}`);
     this.records = {};
     if (data && data.records) {
@@ -40,7 +51,7 @@ const App = {
     this.updateSummary();
   },
 
-  async saveSalaryData() {
+  async saveSalaryData(silent = false) {
     const m = this.getMonthStr();
     this.saveCurrentForm();
     const recs = Object.values(this.records);
@@ -52,7 +63,7 @@ const App = {
         this.records = {};
         res.data.records.forEach(r => { this.records[r.employee_id] = r; });
       }
-      this.toast('💾 Đã lưu bảng lương!', 'success');
+      if (!silent) this.toast('💾 Đã lưu bảng lương!', 'success');
       this.fillForm();
       this.updateSummary();
     }
@@ -69,11 +80,11 @@ const App = {
     document.getElementById('monthDisplay').textContent = `Tháng ${d.getMonth()+1} / ${d.getFullYear()}`;
   },
 
-  changeMonth(delta) {
-    this.saveCurrentForm();
+  async changeMonth(delta) {
+    await this.saveSalaryData(true);
     this.currentMonth.setMonth(this.currentMonth.getMonth() + delta);
     this.updateMonthDisplay();
-    this.loadSalaryData();
+    await this.loadSalaryData();
   },
 
   // ─── Tabs ───
@@ -114,7 +125,8 @@ const App = {
     const r = this.records[this.currentEmpId];
     const ids = { lateCount:'late_count', latePenalty:'late_penalty_each', overtimeHours:'overtime_hours',
       daysOff:'days_off', bonusAmount:'bonus_amount',
-      bonusNote:'bonus_note', salesTotal:'sales_total', withholding:'withholding' };
+      bonusNote:'bonus_note', salesTotal:'sales_total', withholding:'withholding',
+      penaltyAmount:'penalty_amount', penaltyNote:'penalty_note' };
     Object.entries(ids).forEach(([elId, key]) => {
       const el = document.getElementById(elId);
       if (el) {
@@ -136,6 +148,7 @@ const App = {
       days_off: g('daysOff'),
       bonus_amount: g('bonusAmount'),
       bonus_note: g('bonusNote'), sales_total: g('salesTotal'), withholding: g('withholding'),
+      penalty_amount: g('penaltyAmount'), penalty_note: g('penaltyNote'),
       kiotviet_image: (this.records[this.currentEmpId]||{}).kiotviet_image || '',
       calculated: (this.records[this.currentEmpId]||{}).calculated || null
     };
@@ -146,7 +159,7 @@ const App = {
     const r = this.records[this.currentEmpId];
     if (!r) return;
     const res = await this.api('/api/calculate', {
-      method: 'POST', body: JSON.stringify({ employee_id: this.currentEmpId, ...r })
+      method: 'POST', body: JSON.stringify({ employee_id: this.currentEmpId, month: this.getMonthStr(), ...r })
     });
     if (res && !res.error) {
       r.calculated = res;
@@ -169,9 +182,12 @@ const App = {
     const emp = this.employees.find(e => e.id === this.currentEmpId);
     if (!emp) return;
     const r = this.records[this.currentEmpId] || {};
+    const otLabel = (r.days_off === 0)
+      ? 'Tăng ca (' + (r.overtime_hours||0) + ' + 9 giờ)'
+      : 'Tăng ca (' + (r.overtime_hours||0) + ' giờ)';
     const rows = [
       ['Lương cứng', emp.base_salary, true],
-      ['Tăng ca (' + (r.overtime_hours||0) + ' giờ)', c.overtime_total, true],
+      [otLabel, c.overtime_total, true],
       ['Thưởng', r.bonus_amount||0, true]
     ];
     if (emp.gas_allowance > 0) rows.push(['Xăng xe', emp.gas_allowance, true]);
@@ -190,6 +206,7 @@ const App = {
     const negRows = [
       ['Đi trễ (' + (r.late_count||0) + ' phút)', c.late_total],
       ['Nghỉ (' + (r.days_off||0) + ' ngày)', c.days_off_deduction||0],
+      ['Phạt' + (r.penalty_note ? ' (' + r.penalty_note + ')' : ''), c.penalty_total || r.penalty_amount || 0],
       ['Giữ lại', r.withholding||0]
     ];
     html += negRows.map(([l,v]) => `
@@ -220,7 +237,7 @@ const App = {
     tbody.innerHTML = this.employees.map(emp => {
       const r = this.records[emp.id]; const c = r ? r.calculated : null;
       if (!c) return `<tr><td>${emp.name}</td><td colspan="7" style="color:var(--text-muted);text-align:center">Chưa tính</td></tr>`;
-      const totalDeduct = (c.late_total||0) + (c.days_off_deduction||0) + (r.withholding||0);
+      const totalDeduct = (c.late_total||0) + (c.days_off_deduction||0) + (r.withholding||0) + (c.penalty_total || r.penalty_amount || 0);
       return `<tr>
         <td>${emp.name}</td><td>${this.fmt(emp.base_salary)}k</td>
         <td>${this.fmt(c.overtime_total)}k</td><td>${this.fmt(r.bonus_amount)}k</td>
@@ -398,7 +415,7 @@ const App = {
       <div class="slip-section">
         <div class="slip-section-title positive">KHOẢN CỘNG (+)</div>
         <div class="slip-row"><span class="slip-row-label">Lương cứng</span><span class="slip-row-value">${this.fmt(emp.base_salary)}k</span></div>
-        <div class="slip-row"><span class="slip-row-label">Tăng ca (${r.overtime_hours||0} giờ)</span><span class="slip-row-value">${this.fmt(c.overtime_total)}k</span></div>
+        <div class="slip-row"><span class="slip-row-label">Tăng ca (${r.days_off === 0 ? (r.overtime_hours||0) + ' + 9' : r.overtime_hours||0} giờ)</span><span class="slip-row-value">${this.fmt(c.overtime_total)}k</span></div>
         <div class="slip-row"><span class="slip-row-label">Thưởng${r.bonus_note ? ' ('+r.bonus_note+')' : ''}</span><span class="slip-row-value">${this.fmt(r.bonus_amount)}k</span></div>
         ${emp.gas_allowance > 0 ? `<div class="slip-row"><span class="slip-row-label">Xăng xe</span><span class="slip-row-value">${this.fmt(emp.gas_allowance)}k</span></div>` : ''}
         <div class="slip-row"><span class="slip-row-label">Trách nhiệm</span><span class="slip-row-value">${this.fmt(emp.responsibility)}k</span></div>
@@ -409,6 +426,7 @@ const App = {
         <div class="slip-section-title negative">KHOẢN TRỪ (-)</div>
         <div class="slip-row"><span class="slip-row-label">Đi trễ</span><span class="slip-row-value">${this.fmt(c.late_total)}k</span></div>
         <div class="slip-row"><span class="slip-row-label">Nghỉ (${r.days_off||0} ngày)</span><span class="slip-row-value">${this.fmt(c.days_off_deduction)}k</span></div>
+        ${(c.penalty_total || r.penalty_amount) > 0 ? `<div class="slip-row"><span class="slip-row-label">Phạt${r.penalty_note ? ' ('+r.penalty_note+')' : ''}</span><span class="slip-row-value">${this.fmt(c.penalty_total || r.penalty_amount)}k</span></div>` : ''}
         <div class="slip-row"><span class="slip-row-label">Giữ lại</span><span class="slip-row-value">${this.fmt(r.withholding)}k</span></div>
       </div>
       <div class="slip-total">

@@ -36,13 +36,13 @@
     {
       "id": "hoa",
       "name": "Hòa",
-      "base_salary": 2000,
+      "base_salary": 4700,
       "gas_allowance": 300,
-      "responsibility": 0,
-      "overtime_rate": 15,
-      "daily_rate": 100,
+      "responsibility": 600,
+      "overtime_rate": 17.5,
+      "daily_rate": 157,
       "commission_rate": 2,
-      "extra_bonus": 1000
+      "extra_bonus": 0
     }
   ]
 }

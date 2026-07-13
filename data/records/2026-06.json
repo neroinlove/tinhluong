@@ -1,0 +1,28 @@
+{
+  "month": "2026-06",
+  "records": [
+    {
+      "employee_id": "vy",
+      "late_count": 0,
+      "late_penalty_each": 5,
+      "overtime_hours": 5,
+      "days_off": 0,
+      "bonus_amount": 0,
+      "bonus_note": "",
+      "sales_total": 0,
+      "withholding": 0,
+      "penalty_amount": 80,
+      "penalty_note": "LLoi giao hang",
+      "kiotviet_image": "",
+      "calculated": {
+        "overtime_total": 245.0,
+        "late_total": 0,
+        "days_off_deduction": 0.0,
+        "commission": 0.0,
+        "extra_bonus": 0,
+        "penalty_total": 80,
+        "total_salary": 5765.0
+      }
+    }
+  ]
+}

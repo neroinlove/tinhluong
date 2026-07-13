@@ -92,15 +92,22 @@ def calculate_salary(employee, record):
     
     All amounts are in thousands (k). E.g., 4700 = 4,700,000 VND.
     """
-    overtime_total = record.get('overtime_hours', record.get('overtime_days', 0)) * employee.get('overtime_rate', 0)
+    overtime_val = record.get('overtime_hours', record.get('overtime_days', 0))
+    days_off = record.get('days_off', 0)
+    
+    # Nếu số ngày nghỉ bằng 0: Tự động cộng 1 ngày lương (tương đương 9 tiếng tăng ca)
+    extra_ot_hours = 9 if days_off == 0 else 0
+    overtime_total = (overtime_val + extra_ot_hours) * employee.get('overtime_rate', 0)
+    
     late_penalty = record.get('late_penalty_each', 5)  # Mặc định 5k/phút
     late_total = record.get('late_count', 0) * late_penalty
     commission = record.get('sales_total', 0) * (employee.get('commission_rate', 2) / 100)
     extra_bonus = employee.get('extra_bonus', 0)
 
     # Nghỉ: tự tính = số ngày × đơn giá tăng ca × 9 giờ
-    days_off = record.get('days_off', 0)
     days_off_deduction = days_off * employee.get('overtime_rate', 0) * 9
+    
+    penalty_total = record.get('penalty_amount', 0)
 
     total_add = (
         employee.get('base_salary', 0)
@@ -116,6 +123,7 @@ def calculate_salary(employee, record):
         late_total
         + days_off_deduction
         + record.get('withholding', 0)
+        + penalty_total
     )
 
     total_salary = total_add - total_subtract
@@ -126,6 +134,7 @@ def calculate_salary(employee, record):
         'days_off_deduction': round(days_off_deduction, 1),
         'commission': round(commission, 1),
         'extra_bonus': extra_bonus,
+        'penalty_total': round(penalty_total, 1),
         'total_salary': round(total_salary, 1)
     }
 
@@ -141,7 +150,25 @@ def dashboard():
 @app.route('/api/employees', methods=['GET'])
 def get_employees():
     """Get all employees."""
+    month = request.args.get('month')
     data = load_employees()
+    if month:
+        try:
+            year, m_num = map(int, month.split('-'))
+            is_before_june_2026 = (year < 2026) or (year == 2026 and m_num < 6)
+        except Exception:
+            is_before_june_2026 = False
+            
+        if is_before_june_2026:
+            for emp in data.get('employees', []):
+                if emp['id'] == 'hoa':
+                    emp['base_salary'] = 2000.0
+                    emp['gas_allowance'] = 300.0
+                    emp['responsibility'] = 0.0
+                    emp['overtime_rate'] = 15.0
+                    emp['daily_rate'] = 100.0
+                    emp['commission_rate'] = 2.0
+                    emp['extra_bonus'] = 1000.0
     return jsonify(data)
 
 
@@ -238,6 +265,31 @@ def save_salary(month):
     salary_data = request.json
     employees_data = load_employees()
 
+    try:
+        year, m_num = map(int, month.split('-'))
+        is_before_june_2026 = (year < 2026) or (year == 2026 and m_num < 6)
+    except Exception:
+        is_before_june_2026 = False
+
+    for emp in employees_data.get('employees', []):
+        if emp['id'] == 'hoa':
+            if is_before_june_2026:
+                emp['base_salary'] = 2000.0
+                emp['gas_allowance'] = 300.0
+                emp['responsibility'] = 0.0
+                emp['overtime_rate'] = 15.0
+                emp['daily_rate'] = 100.0
+                emp['commission_rate'] = 2.0
+                emp['extra_bonus'] = 1000.0
+            else:
+                emp['base_salary'] = 4700.0
+                emp['gas_allowance'] = 300.0
+                emp['responsibility'] = 600.0
+                emp['overtime_rate'] = 17.5
+                emp['daily_rate'] = 157.0
+                emp['commission_rate'] = 2.0
+                emp['extra_bonus'] = 0.0
+
     # Calculate salary for each record
     for rec in salary_data.get('records', []):
         emp = next((e for e in employees_data['employees'] if e['id'] == rec['employee_id']), None)
@@ -258,6 +310,33 @@ def calc_salary():
     emp = next((e for e in employees_data['employees'] if e['id'] == req.get('employee_id')), None)
     if not emp:
         return jsonify({'error': 'Không tìm thấy nhân viên'}), 404
+
+    # Adjust employee data based on month if provided
+    month = req.get('month')
+    if month:
+        try:
+            year, m_num = map(int, month.split('-'))
+            is_before_june_2026 = (year < 2026) or (year == 2026 and m_num < 6)
+        except Exception:
+            is_before_june_2026 = False
+            
+        if emp['id'] == 'hoa':
+            if is_before_june_2026:
+                emp['base_salary'] = 2000.0
+                emp['gas_allowance'] = 300.0
+                emp['responsibility'] = 0.0
+                emp['overtime_rate'] = 15.0
+                emp['daily_rate'] = 100.0
+                emp['commission_rate'] = 2.0
+                emp['extra_bonus'] = 1000.0
+            else:
+                emp['base_salary'] = 4700.0
+                emp['gas_allowance'] = 300.0
+                emp['responsibility'] = 600.0
+                emp['overtime_rate'] = 17.5
+                emp['daily_rate'] = 157.0
+                emp['commission_rate'] = 2.0
+                emp['extra_bonus'] = 0.0
 
     result = calculate_salary(emp, req)
     return jsonify(result)
