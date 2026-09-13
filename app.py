@@ -399,4 +399,7 @@ def export_image():
 # ─── Entry Point ────────────────────────────────────────────────
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    host = os.environ.get('HOST', '0.0.0.0')
+    port = int(os.environ.get('PORT', '5502'))
+    debug = os.environ.get('DEBUG', '0') == '1'
+    app.run(host=host, port=port, debug=debug)
