@@ -20,5 +20,9 @@ venv.bak/
 
 # Python cache
 __pycache__/
-*.py[cod]
+*.py[cod]*
 *$py.class
+
+# Workflow — active handoff files (không commit task đang chạy)
+.workflow/handoff/CURRENT_TASK.md
+.workflow/handoff/TASK-*.md

@@ -1,0 +1,26 @@
+{
+  "default_mode": "normal",
+  "overrides": {
+    "@quick": "quick",
+    "@deep": "deep"
+  },
+  "agent_overrides": ["@claude", "@codex", "@antigravity"],
+  "default_agent": "antigravity",
+  "mode_rules": {
+    "quick": {
+      "skip_analysis": true,
+      "approval_gate": "none",
+      "scope": "isolation"
+    },
+    "normal": {
+      "skip_analysis": false,
+      "approval_gate": "conditional",
+      "scope": "isolation"
+    },
+    "deep": {
+      "skip_analysis": false,
+      "approval_gate": "conditional",
+      "scope": "godmode-on-confirm"
+    }
+  }
+}
